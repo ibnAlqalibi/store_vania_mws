@@ -21,7 +21,7 @@ class CustomerController extends Controller {
     }
   }
 
-  Future<Response> create(Request req) async {
+  Future<Response> store(Request req) async {
     try {
       req.validate({
         'cust_id': 'required|string|max_length:5',
@@ -65,19 +65,76 @@ class CustomerController extends Controller {
       } else {
         return Response.json({
           "success": false,
-          "message": "Kesalahan pada server",
+          "message": e.toString(),
           "data": null,
         }, 500);
       }
     }
   }
 
-  Future<Response> update(Request request, int id) async {
-    return Response.json({});
+  Future<Response> update(Request req, String id) async {
+    try {
+      req.validate({
+        'cust_name': 'string|max_length:100',
+        'cust_address': 'string|max_length:50',
+        'cust_city': 'string|max_length:20',
+        'cust_state': 'string|max_length:5',
+        'cust_zip': 'string|max_length:7',
+        'cust_country': 'string|max_length:25',
+        'cust_telp': 'string|max_length:15',
+      });
+
+      final requestData = req.input();
+      final customer =
+          await Customer().query().where('cust_id', '=', id).first();
+      if (customer == null) {
+        return Response.json({
+          "success": false,
+          "message": "Customer tidak ditemukan",
+          "data": null,
+        }, 404);
+      }
+      await Customer().query().where('cust_id', '=', id).update(requestData);
+      final updatedData = await Customer().query().get();
+
+      return Response.json({
+        "success": true,
+        "message": "Berhasil mengupdate data",
+        "data": updatedData,
+      }, 200);
+    } catch (e) {
+      if (e is ValidationException) {
+        final errorMessages = e.message;
+        return Response.json({
+          "success": false,
+          "message": errorMessages,
+          "data": null,
+        }, 400);
+      } else {
+        return Response.json({
+          "success": false,
+          "message": e.toString(),
+          "data": null,
+        }, 500);
+      }
+    }
   }
 
-  Future<Response> destroy(int id) async {
-    return Response.json({});
+  Future<Response> destroy(String id) async {
+    try {
+      await Customer().query().where('cust_id', '=', id).delete();
+      return Response.json({
+        "success": true,
+        "message": "Berhasil menghapus data",
+        "data": null,
+      }, 200);
+    } catch (e) {
+      return Response.json({
+        "success": false,
+        "message": e.toString(),
+        "data": null,
+      }, 500);
+    }
   }
 }
 
