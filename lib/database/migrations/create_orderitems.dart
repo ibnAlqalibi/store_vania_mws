@@ -5,7 +5,7 @@ class CreateOrderitems extends Migration {
   Future<void> up() async {
     super.up();
     await createTableNotExists('orderitems', () {
-      integer('order_item', length: 11);
+      integer('order_item', length: 11, unique: true, nullable: false);
       integer('order_num', length: 11);
       string('prod_id', length: 10);
       integer('quantity', length: 11);
