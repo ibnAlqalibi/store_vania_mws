@@ -6,6 +6,8 @@ import 'create_orderitems.dart';
 import 'create_productnotes.dart';
 import 'create_products.dart';
 import 'create_vendors.dart';
+import 'create_user.dart';
+import 'create_personal_access_token.dart';
 
 void main(List<String> args) async {
   await MigrationConnection().setup();
@@ -20,20 +22,24 @@ void main(List<String> args) async {
 
 class Migrate {
   registry() async {
-    await CreateCustomersTable().up();
+		 await CreateCustomersTable().up();
     await CreateOrders().up();
     await CreateOrderitems().up();
     await CreateProductnotes().up();
     await CreateProducts().up();
     await CreateVendors().up();
-  }
+		 await CreateUser().up();
+		 await CreatePersonalAccessToken().up();
+	}
 
   dropTables() async {
-    await CreateVendors().down();
+		 await CreatePersonalAccessToken().down();
+		 await CreateUser().down();
+		 await CreateVendors().down();
     await CreateProducts().down();
     await CreateProductnotes().down();
     await CreateOrderitems().down();
     await CreateOrders().down();
     await CreateCustomersTable().down();
-  }
+	 }
 }
