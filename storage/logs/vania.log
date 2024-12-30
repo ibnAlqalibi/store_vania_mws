@@ -1,0 +1,1 @@
+[2024-12-30 01:26:11] ERROR: MySQLServerException [1054]: Unknown column 'deleted_at' in 'where clause'

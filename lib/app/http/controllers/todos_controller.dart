@@ -1,16 +1,18 @@
-import 'package:store/app/models/order_items.dart';
+import 'package:store/app/models/todo.dart';
 import 'package:vania/vania.dart';
 // ignore: implementation_imports
 import 'package:vania/src/exception/validation_exception.dart';
 
-class OrderItemController extends Controller {
+class TodosController extends Controller {
   Future<Response> index() async {
     try {
-      final orderItemsData = await OrderItems().query().get();
+      Map? user = Auth().user();
+      final userId = user!['id'];
+      final orderData = await Todo().query().where("userId", "=", userId).get();
       return Response.json({
         "success": true,
         "message": "Berhasil menampilkan data",
-        "data": orderItemsData,
+        "data": orderData,
       }, 200);
     } catch (e) {
       return Response.json({
@@ -24,33 +26,29 @@ class OrderItemController extends Controller {
 //buat validasi
   Future<Response> store(Request req) async {
     try {
+      Map? user = Auth().user();
+      final userId = user!['id'];
       req.validate({
-        'order_item': 'required|numeric|max_length:11',
-        'order_num': 'required|numeric|max_length:11',
-        'prod_id': 'required|string|max_length:10',
-        'quantity': 'required|numeric|max_length:11',
-        'size': 'required|numeric|max_length:11',
+        'id': 'required|string',
+        'todo': 'required|string',
+        'status': 'required|string|max_length:10',
       });
 
-      final requestData = req.input();
-      final existingProduct = await OrderItems()
-          .query()
-          .where('order_item', '=', requestData['order_item'])
-          .first();
+      final todo = req.input("todo");
+      final status = req.input("status");
 
-      if (existingProduct != null) {
-        return Response.json({
-          'message': 'Item order dengan id ini sudah ada.',
-          'success': false,
-          'data': null
-        }, 409);
-      }
-      await OrderItems().query().insert(requestData);
+      await Todo().query().insert({
+        "userId": userId,
+        "id": req.input("id"),
+        "todo": todo,
+        "status": status,
+        "created_at": DateTime.now().toIso8601String(),
+      });
 
       return Response.json({
         "success": true,
         "message": "Berhasil memasukkan data",
-        "data": requestData,
+        "data": todo,
       }, 201);
     } catch (e) {
       if (e is ValidationException) {
@@ -70,30 +68,23 @@ class OrderItemController extends Controller {
     }
   }
 
-  Future<Response> update(Request req, int id) async {
+  Future<Response> update(Request req, String id) async {
     try {
       req.validate({
-        'order_num': 'numeric|max_length:11',
-        'prod_id': 'string|max_length:10',
-        'quantity': 'numeric|max_length:11',
-        'size': 'numeric|max_length:11',
+        'todo': 'string',
       });
 
       final requestData = req.input();
-      final orderItems =
-          await OrderItems().query().where('order_item', '=', id).first();
-      if (orderItems == null) {
+      final todo = await Todo().query().where('id', '=', id).first();
+      if (todo == null) {
         return Response.json({
           "success": false,
-          "message": "Item order tidak ditemukan",
+          "message": "Order tidak ditemukan",
           "data": null,
         }, 404);
       }
-      await OrderItems()
-          .query()
-          .where('order_item', '=', id)
-          .update(requestData);
-      final updatedData = await OrderItems().query().get();
+      await Todo().query().where('id', '=', id).update(requestData);
+      final updatedData = await Todo().query().get();
 
       return Response.json({
         "success": true,
@@ -118,9 +109,9 @@ class OrderItemController extends Controller {
     }
   }
 
-  Future<Response> destroy(int id) async {
+  Future<Response> destroy(String id) async {
     try {
-      await OrderItems().query().where('order_item', '=', id).delete();
+      await Todo().query().where('id', '=', id).delete();
       return Response.json({
         "success": true,
         "message": "Berhasil menghapus data",
@@ -136,4 +127,4 @@ class OrderItemController extends Controller {
   }
 }
 
-final OrderItemController orderItemController = OrderItemController();
+final TodosController todosController = TodosController();
